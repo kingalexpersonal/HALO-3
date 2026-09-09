@@ -6,6 +6,7 @@
 <title>HALO</title>
 <style>
   :root{
+    color-scheme:light dark;
     --paper:#EDEAE4;
     --paper-raised:#FFFFFF;
     --ink:#221F1D;
@@ -19,6 +20,8 @@
     --glass-bg-soft:rgba(255,255,255,0.22);
     --glass-border:rgba(255,255,255,0.55);
     --glass-highlight:inset 0 1px 0 rgba(255,255,255,0.65), inset 0 0 0 1px rgba(255,255,255,0.18);
+    --focus:#0A84FF;
+    --shadow-large:0 30px 70px rgba(0,0,0,.24), 0 0 0 1px rgba(255,255,255,.08);
   }
   @media (prefers-color-scheme: dark){
     :root{
@@ -31,6 +34,8 @@
       --glass-bg-soft:rgba(255,255,255,0.07);
       --glass-border:rgba(255,255,255,0.18);
       --glass-highlight:inset 0 1px 0 rgba(255,255,255,0.15), inset 0 0 0 1px rgba(255,255,255,0.08);
+      --focus:#64D2FF;
+      --shadow-large:0 30px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08);
     }
   }
   *{box-sizing:border-box;}
@@ -40,8 +45,10 @@
     font-family:var(--font);
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
-    background:#FFFFFF;
+    background:radial-gradient(circle at 20% 10%, #fffaf5 0, #f2eee7 42%, #ded8cf 100%);
     color:var(--ink);
+    font-size:16px;
+    overscroll-behavior:none;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -49,7 +56,7 @@
     overflow:hidden;
   }
   @media (prefers-color-scheme: dark){
-    body{ background:#000000; }
+    body{ background:radial-gradient(circle at 20% 10%, #343436 0, #1c1c1e 48%, #09090a 100%); }
   }
 
   /* ---------- Window chrome ---------- */
@@ -61,7 +68,8 @@
     display:flex;
     border-radius:12px;
     overflow:hidden;
-    box-shadow:0 30px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
+    box-shadow:var(--shadow-large);
+    isolation:isolate;
   }
   /* ---------- Sidebar ---------- */
   .sidebar{
@@ -103,10 +111,11 @@
     font-size:14px;
     font-weight:600;
     cursor:pointer;
-    transition:transform .12s ease, background .12s ease;
+    transition:transform 180ms cubic-bezier(.2,.8,.2,1), background 180ms ease, box-shadow 180ms ease;
+    min-height:44px;
   }
-  .new-note:hover{ background:rgba(198,76,67,0.85); }
-  .new-note:active{ transform:scale(0.97); }
+  .new-note:hover{ background:rgba(198,76,67,0.9); box-shadow:0 8px 18px rgba(198,76,67,.22), inset 0 1px 0 rgba(255,255,255,.5); }
+  .new-note:active{ transform:scale(.97); transition-duration:80ms; }
 
   .search-field{
     margin:0 20px 12px;
@@ -120,7 +129,10 @@
     font-size:13px;
     color:var(--ink);
     outline:none;
+    min-height:40px;
+    transition:background 180ms ease, box-shadow 180ms ease;
   }
+  .search-field:focus{ background:var(--glass-bg); box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent); }
   .search-field::placeholder{ color:var(--ink-soft); }
 
   .note-list{
@@ -149,6 +161,7 @@
   }
   .note-item:hover .pin-btn, .note-item .pin-btn.pinned{ opacity:1; }
   .note-item:hover{ background:var(--glass-bg-soft); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+  .note-item:active{ transform:scale(.985); transition-duration:80ms; }
   .note-item.active{
     background:var(--glass-bg);
     backdrop-filter:blur(20px);
@@ -199,7 +212,11 @@
     align-items:center;
     justify-content:space-between;
     padding:18px 34px;
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(24px) saturate(180%);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);
     border-bottom:1px solid var(--glass-border);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
   }
   .toolbar .date-label{
     font-size:13px;
@@ -227,9 +244,11 @@
     border:none;
     outline:none;
     font-family:var(--font);
-    font-size:32px;
+    font-size:clamp(2rem, 4vw, 2.8rem);
+    line-height:1.08;
     font-weight:700;
-    letter-spacing:-0.01em;
+    letter-spacing:-0.035em;
+    font-optical-sizing:auto;
     margin-top:14px;
     background:transparent;
     color:var(--ink);
@@ -242,8 +261,9 @@
     outline:none;
     resize:none;
     font-family:var(--font);
-    font-size:16px;
+    font-size:1rem;
     line-height:1.7;
+    letter-spacing:.005em;
     background:transparent;
     color:var(--ink);
     margin-top:10px;
@@ -267,8 +287,12 @@
   ::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.18); border-radius:10px; }
   ::-webkit-scrollbar-track{ background:transparent; }
 
-  ::selection{ background:#0A84FF; color:#fff; }
-  button:focus-visible{ outline:2px solid #0A84FF; outline-offset:2px; }
+  ::selection{ background:var(--focus); color:#fff; }
+  :where(button, input, textarea, [tabindex]):focus-visible{ outline:3px solid color-mix(in srgb, var(--focus) 72%, transparent); outline-offset:3px; }
+  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  @media (prefers-reduced-transparency: reduce){ .sidebar, .main, .toolbar, .palette, .new-note, .search-field, .note-item.active{ backdrop-filter:none; -webkit-backdrop-filter:none; background:var(--paper-raised); } }
+  @media (prefers-contrast: more){ .sidebar, .main, .toolbar, .palette, .note-item.active{ border-color:var(--ink-soft); } }
+  @media (prefers-reduced-motion: reduce){ *, *::before, *::after{ scroll-behavior:auto !important; transition-duration:.01ms !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; } #splash-screen{ transition:opacity 160ms ease; } }
 
   .menu-btn{
     display:none;
@@ -298,7 +322,8 @@
     justify-content:center;
     padding-top:12vh;
   }
-  .palette-overlay.open{ display:flex; }
+  .palette-overlay.open{ display:flex; animation:palette-in 220ms cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes palette-in{ from{ opacity:0; } to{ opacity:1; } }
   .palette{
     width:480px;
     max-width:90vw;
@@ -340,6 +365,7 @@
     .window{ border-radius:0; max-width:none; max-height:none; box-shadow:none; }
     .sidebar{ position:fixed; z-index:5; transform:translateX(-100%); transition:transform .2s ease; box-shadow:0 0 30px rgba(0,0,0,.15); }
     .sidebar.open{ transform:translateX(0); }
+    .sidebar.dragging{ transition:none; }
     .toolbar{ padding:16px 20px; }
     .editor-wrap{ padding:0 20px 30px; }
     .menu-btn{
@@ -354,8 +380,10 @@
       display:block;
       position:fixed;
       inset:0;
-      background:rgba(0,0,0,.25);
+      background:rgba(0,0,0,.28);
       z-index:4;
+      backdrop-filter:blur(3px);
+      -webkit-backdrop-filter:blur(3px);
     }
   }
 
@@ -403,7 +431,7 @@
 </div>
 
 <div class="window">
-<div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar" aria-label="Notes navigation">
   <div class="brand">
     <svg viewBox="0 0 100 100" aria-hidden="true">
       <path fill="#E8635A" d="M27 12 C46 4, 70 6, 84 20 C96 32, 97 56, 89 72 C80 90, 56 97, 36 92 C16 87, 4 68, 5 47 C6 29, 12 18, 27 12 Z"/>
@@ -413,21 +441,23 @@
     <h1>HALO</h1>
   </div>
   <button class="new-note" id="new-note-btn">+ New note</button>
-  <input class="search-field" id="search-field" type="text" placeholder="Search notes" autocomplete="off">
+  <label class="sr-only" for="search-field">Search notes</label>
+  <input class="search-field" id="search-field" type="search" placeholder="Search notes" autocomplete="off">
   <div class="note-list" id="note-list"></div>
   <button class="delete-btn" id="export-all-btn" style="margin:4px 20px 14px; align-self:flex-start;">Export all</button>
 </div>
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="palette-overlay" id="palette-overlay">
+<div class="palette-overlay" id="palette-overlay" role="dialog" aria-modal="true" aria-label="Quick switcher">
   <div class="palette">
-    <input class="palette-input" id="palette-input" placeholder="Jump to a note, or ⏎ for a new one" autocomplete="off">
+    <label class="sr-only" for="palette-input">Jump to a note</label>
+    <input class="palette-input" id="palette-input" placeholder="Jump to a note, or press Enter for a new one" autocomplete="off">
     <div class="palette-results" id="palette-results"></div>
   </div>
 </div>
 
 <div class="main">
-  <button class="menu-btn" id="menu-btn" aria-label="Toggle note list">☰</button>
+  <button class="menu-btn" id="menu-btn" aria-label="Toggle note list" aria-expanded="false">☰</button>
   <div class="toolbar" id="toolbar" style="display:none;">
     <span class="date-label" id="date-label"></span>
     <span>
@@ -453,7 +483,8 @@
 
 <script>
   const STORAGE_KEY = 'halo-notes';
-  let notes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let notes;
+  try { notes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { notes = []; }
   let activeId = null;
 
   const listEl = document.getElementById('note-list');
@@ -495,7 +526,7 @@
       const item = document.createElement('div');
       item.className = 'note-item' + (note.id === activeId ? ' active' : '');
       item.innerHTML = `
-        <button class="pin-btn${note.pinned ? ' pinned' : ''}" data-id="${note.id}">${note.pinned ? '📌' : '📍'}</button>
+        <button class="pin-btn${note.pinned ? ' pinned' : ''}" data-id="${note.id}" aria-label="${note.pinned ? 'Unpin' : 'Pin'} note" aria-pressed="${!!note.pinned}">${note.pinned ? '📌' : '📍'}</button>
         <div class="title">${escapeHtml(note.title) || 'Untitled'}</div>
         <div class="preview">${escapeHtml(note.body.slice(0, 60)) || 'No additional text'}</div>
         <div class="date">${formatDate(note.updatedAt)}</div>
@@ -586,6 +617,7 @@
   }
 
   function deleteActiveNote(){
+    if(!activeId) return;
     notes = notes.filter(n => n.id !== activeId);
     save();
     showEmptyState();
@@ -619,9 +651,41 @@
   function toggleSidebar(open){
     sidebarEl.classList.toggle('open', open);
     overlayEl.classList.toggle('open', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
   }
   menuBtn.addEventListener('click', () => toggleSidebar(!sidebarEl.classList.contains('open')));
   overlayEl.addEventListener('click', () => toggleSidebar(false));
+
+  let drawerGesture = null;
+  sidebarEl.addEventListener('pointerdown', (event) => {
+    if (window.innerWidth > 720 || event.pointerType === 'mouse') return;
+    drawerGesture = { startX:event.clientX, lastX:event.clientX, lastTime:performance.now(), velocity:0, startOffset:sidebarEl.classList.contains('open') ? 0 : -sidebarEl.offsetWidth };
+    sidebarEl.classList.add('dragging');
+    sidebarEl.setPointerCapture(event.pointerId);
+  });
+  sidebarEl.addEventListener('pointermove', (event) => {
+    if (!drawerGesture) return;
+    const now = performance.now();
+    const dt = Math.max(1, now - drawerGesture.lastTime);
+    drawerGesture.velocity = (event.clientX - drawerGesture.lastX) / dt;
+    drawerGesture.lastX = event.clientX; drawerGesture.lastTime = now;
+    const raw = drawerGesture.startOffset + event.clientX - drawerGesture.startX;
+    const min = -sidebarEl.offsetWidth;
+    const bounded = raw > 0 ? raw * .22 : raw < min ? min + (raw - min) * .22 : raw;
+    sidebarEl.style.transform = `translate3d(${bounded}px,0,0)`;
+  });
+  sidebarEl.addEventListener('pointerup', (event) => {
+    if (!drawerGesture) return;
+    const distance = event.clientX - drawerGesture.startX;
+    const projected = drawerGesture.startOffset + distance + drawerGesture.velocity * 180;
+    const shouldOpen = projected > -sidebarEl.offsetWidth / 2;
+    drawerGesture = null; sidebarEl.classList.remove('dragging'); sidebarEl.style.transform = '';
+    toggleSidebar(shouldOpen);
+  });
+  sidebarEl.addEventListener('pointercancel', () => {
+    drawerGesture = null; sidebarEl.classList.remove('dragging'); sidebarEl.style.transform = '';
+    toggleSidebar(false);
+  });
 
   document.getElementById('new-note-btn').addEventListener('click', newNote);
   document.getElementById('delete-btn').addEventListener('click', deleteActiveNote);
