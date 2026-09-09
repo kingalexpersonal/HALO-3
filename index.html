@@ -20,6 +20,19 @@
     --glass-border:rgba(255,255,255,0.55);
     --glass-highlight:inset 0 1px 0 rgba(255,255,255,0.65), inset 0 0 0 1px rgba(255,255,255,0.18);
   }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#1C1C1E;
+      --paper-raised:#2C2C2E;
+      --ink:#F2F2F2;
+      --ink-soft:#9A9A9E;
+      --line:#3A3A3C;
+      --glass-bg:rgba(255,255,255,0.12);
+      --glass-bg-soft:rgba(255,255,255,0.07);
+      --glass-border:rgba(255,255,255,0.18);
+      --glass-highlight:inset 0 1px 0 rgba(255,255,255,0.15), inset 0 0 0 1px rgba(255,255,255,0.08);
+    }
+  }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
@@ -35,6 +48,9 @@
     height:100vh;
     overflow:hidden;
   }
+  @media (prefers-color-scheme: dark){
+    body{ background:#000000; }
+  }
 
   /* ---------- Window chrome ---------- */
   .window{
@@ -47,21 +63,6 @@
     overflow:hidden;
     box-shadow:0 30px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
   }
-  .traffic-lights{
-    display:flex;
-    gap:8px;
-    padding:14px 16px 4px;
-  }
-  .traffic-lights span{
-    width:12px;
-    height:12px;
-    border-radius:50%;
-    display:inline-block;
-  }
-  .traffic-lights .red{ background:#FF5F57; }
-  .traffic-lights .yellow{ background:#FEBC2E; }
-  .traffic-lights .green{ background:#28C840; }
-
   /* ---------- Sidebar ---------- */
   .sidebar{
     width:300px;
@@ -79,7 +80,7 @@
     display:flex;
     align-items:center;
     gap:12px;
-    padding:6px 20px 16px;
+    padding:22px 20px 16px;
   }
   .brand svg{ width:38px; height:38px; flex-shrink:0; }
   .brand h1{
@@ -106,6 +107,21 @@
   }
   .new-note:hover{ background:rgba(198,76,67,0.85); }
   .new-note:active{ transform:scale(0.97); }
+
+  .search-field{
+    margin:0 20px 12px;
+    padding:8px 14px;
+    background:var(--glass-bg-soft);
+    border:1px solid var(--glass-border);
+    border-radius:999px;
+    backdrop-filter:blur(20px) saturate(180%);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    font-family:inherit;
+    font-size:13px;
+    color:var(--ink);
+    outline:none;
+  }
+  .search-field::placeholder{ color:var(--ink-soft); }
 
   .note-list{
     flex:1;
@@ -287,7 +303,6 @@
 
 <div class="window">
 <div class="sidebar" id="sidebar">
-  <div class="traffic-lights"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
   <div class="brand">
     <svg viewBox="0 0 100 100" aria-hidden="true">
       <path fill="#E8635A" d="M27 12 C46 4, 70 6, 84 20 C96 32, 97 56, 89 72 C80 90, 56 97, 36 92 C16 87, 4 68, 5 47 C6 29, 12 18, 27 12 Z"/>
@@ -297,6 +312,7 @@
     <h1>HALO</h1>
   </div>
   <button class="new-note" id="new-note-btn">+ New note</button>
+  <input class="search-field" id="search-field" type="text" placeholder="Search notes" autocomplete="off">
   <div class="note-list" id="note-list"></div>
 </div>
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -335,6 +351,7 @@
   const editorWrapEl = document.getElementById('editor-wrap');
   const emptyStateEl = document.getElementById('empty-state');
   const dateLabelEl = document.getElementById('date-label');
+  const searchEl = document.getElementById('search-field');
 
   function save(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
@@ -346,11 +363,19 @@
 
   function renderList(){
     listEl.innerHTML = '';
+    const query = searchEl.value.trim().toLowerCase();
+    const filtered = query
+      ? notes.filter(n => n.title.toLowerCase().includes(query) || n.body.toLowerCase().includes(query))
+      : notes;
     if(notes.length === 0){
       listEl.innerHTML = '<div class="empty-list">No notes yet — tap "New note" to start.</div>';
       return;
     }
-    const sorted = [...notes].sort((a,b) => b.updatedAt - a.updatedAt);
+    if(filtered.length === 0){
+      listEl.innerHTML = '<div class="empty-list">No notes match your search.</div>';
+      return;
+    }
+    const sorted = [...filtered].sort((a,b) => b.updatedAt - a.updatedAt);
     sorted.forEach(note => {
       const item = document.createElement('div');
       item.className = 'note-item' + (note.id === activeId ? ' active' : '');
@@ -436,6 +461,7 @@
   document.getElementById('delete-btn').addEventListener('click', deleteActiveNote);
   titleEl.addEventListener('input', updateActiveNote);
   bodyEl.addEventListener('input', updateActiveNote);
+  searchEl.addEventListener('input', renderList);
 
   document.addEventListener('keydown', (e) => {
     if(!e.metaKey) return;
